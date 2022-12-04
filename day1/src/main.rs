@@ -2,6 +2,8 @@ use std::env;
 use std::fs;
 use std::process;
 use std::error::Error;
+use std::fmt;
+use std::cmp::Ordering;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -33,16 +35,11 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
         elves.push(elf);
     }
 
-    let mut largest_elf = 0;
+    elves.sort_unstable_by(|a, b| if a.total_calorie_count > b.total_calorie_count { Ordering::Less } else { Ordering::Greater });
 
-    for (idx, elf) in elves.iter().enumerate() {
-        if elves[largest_elf].total_calorie_count < elf.total_calorie_count {
-            largest_elf = idx.try_into().unwrap();
-        }
-        println!("Elf {} has {} calories", elf.elf_id, elf.total_calorie_count);
-    }
-
-    println!("The elf with the most calories is elf #{}", largest_elf);
+    println!("The elf with the most calories is {}", elves[0]);
+    let top_3_calories = elves[0].total_calorie_count + elves[1].total_calorie_count + elves[2].total_calorie_count;
+    println!("the top 3 elves have {} calories", top_3_calories);
 
     Ok(())
 }
@@ -50,6 +47,12 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
 struct Elf {
     elf_id: i32,
     total_calorie_count: i32
+}
+
+impl fmt::Display for Elf {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Elf: id: {}, calories: {}", self.elf_id, self.total_calorie_count)
+    }
 }
 
 struct Config {

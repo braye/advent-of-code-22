@@ -24,8 +24,22 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     for battle in battles {
         let actions: Vec<&str> = battle.split_whitespace().collect();
-        let opponent_action = determine_action(actions[0]);
-        let player_action = determine_action(actions[1]);
+
+        let opponent_action = match actions[0] {
+            "A" => RPSAction::Rock,
+            "B" => RPSAction::Paper,
+            "C" => RPSAction::Scissors,
+            &_ => todo!()
+        };
+
+        let desired_outcome = match actions[1] {
+            "X" => RPSOutcome::Lose,
+            "Y" => RPSOutcome::Draw,
+            "Z" => RPSOutcome::Win,
+            &_ => todo!()
+        };
+
+        let player_action = determine_action(&opponent_action, desired_outcome);
 
         score_from_guide += match player_action {
             RPSAction::Rock => 1,
@@ -34,7 +48,7 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
         };
 
         println!("Battle: {} vs {}", player_action, opponent_action);
-        let result = determine_outcome(player_action, opponent_action);
+        let result = do_battle(player_action, opponent_action);
         println!("Result: {} points", result);
         score_from_guide += result;
     }
@@ -43,16 +57,23 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn determine_action(action: &str) -> RPSAction {
-    return match action {
-        "A" | "X" => RPSAction::Rock,
-        "B" | "Y" => RPSAction::Paper,
-        "C" | "Z" => RPSAction::Scissors,
-        &_ => todo!()
+fn determine_action(opponent_action: &RPSAction, outcome: RPSOutcome) -> RPSAction {
+    return match (opponent_action, outcome) {
+        (RPSAction::Rock, RPSOutcome::Win) => RPSAction::Paper,
+        (RPSAction::Rock, RPSOutcome::Lose) => RPSAction::Scissors,
+        (RPSAction::Rock, RPSOutcome::Draw) => RPSAction::Rock,
+
+        (RPSAction::Paper, RPSOutcome::Win) => RPSAction::Scissors,
+        (RPSAction::Paper, RPSOutcome::Lose) => RPSAction::Rock,
+        (RPSAction::Paper, RPSOutcome::Draw) => RPSAction::Paper,
+
+        (RPSAction::Scissors, RPSOutcome::Win) => RPSAction::Rock,
+        (RPSAction::Scissors, RPSOutcome::Lose) => RPSAction::Paper,
+        (RPSAction::Scissors, RPSOutcome::Draw) => RPSAction::Scissors,
     }
 }
 
-fn determine_outcome(player_action: RPSAction, opponent_action: RPSAction) -> i32 {
+fn do_battle(player_action: RPSAction, opponent_action: RPSAction) -> i32 {
     // unholy code smell below
     return match (player_action, opponent_action) {
         (RPSAction::Rock, RPSAction::Rock) => 3,
@@ -73,6 +94,12 @@ enum RPSAction {
     Rock,
     Paper,
     Scissors
+}
+
+enum RPSOutcome {
+    Win,
+    Lose,
+    Draw
 }
 
 impl fmt::Display for RPSAction {
